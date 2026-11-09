@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dzwallet"
+version = "0.2.0"
+description = "Python SDK for the DzWallet payment API (CIB / Edahabia via SATIM, payment links and QR codes). No dependencies."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+keywords = ["payment", "dzwallet", "satim", "cib", "edahabia", "algeria", "dzd"]
+classifiers = ["License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3"]
+
+[project.urls]
+Homepage = "https://dzwallet.app"
+
+[tool.setuptools]
+packages = ["dzwallet"]
