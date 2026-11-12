@@ -50,12 +50,14 @@ from dzwallet import InvalidSignatureError
 @app.post("/dzwallet/ipn")
 def ipn_view():
     try:
-        ipn, event_id = dz.verify_notification(request.get_data(), request.headers)   # signature + 5 minute window
+        ipn, event_id = dz.verify_notification(request.get_data(), request.headers, require_v2=True)   # signature + 5 minute window
     except InvalidSignatureError:
         abort(403)
     if already_processed(event_id):                     # unique constraint on event id
         return "OK", 200
     order = find_order(ipn.identifier)                  # your own code
+    if order is None:
+        abort(404)
     if abs(float(ipn.amount) - float(order.total)) > 0.005:   # amount must match YOUR order
         abort(400)
     if ipn.is_success and not order.paid:               # fulfil once
@@ -67,7 +69,7 @@ def ipn_view():
 - `verify_notification(raw_body, headers, tolerance=300, require_v2=False)` uses the v2 signature when DzWallet sends it and falls back to the older `signature` field (uppercase HMAC of `data.amount + identifier`) otherwise. Pass `require_v2=True` to refuse the older one. Django: `request.body` and `request.headers`.
 - The event id is read from the signed body, so a replayed request cannot dodge the duplicate check by changing a header. It is the same on every retry and on manual redelivery.
 - Lower level: `verify_webhook(raw_body, header)` returns `{"timestamp": ..., "event_id": ...}`; `parse_ipn_form(text)` and `verify_ipn(dict)` still work.
-- Retries: DzWallet retries unsuccessful deliveries with increasing delays for about 12 hours. Failed deliveries can be resent from the merchant dashboard (Webhook Log).
+- Retries: DzWallet retries unsuccessful deliveries with increasing delays for up to 15 attempts. Failed deliveries can be resent from the merchant dashboard (Webhook Log).
 
 ## Status and payment links
 
